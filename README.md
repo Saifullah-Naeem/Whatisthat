@@ -89,7 +89,14 @@ flutter test
 # Output: dist\WhatIsThatSetup.exe
 ```
 
-### 5. Automated Cloud Builds (GitHub Actions)
+### 5. Build Linux Desktop Bundle (Ubuntu / Debian)
+```bash
+sudo apt install clang cmake ninja-build pkg-config libgtk-3-dev
+./scripts/build_linux.sh
+# Output: dist/WhatIsThat-Linux-x64.tar.gz
+```
+
+### 6. Automated Cloud Builds (GitHub Actions)
 A ready-to-use workflow template for building both `WhatIsThatSetup.exe` and `WhatIsThat-Android.apk` on GitHub Actions is included at [`docs/github_release_workflow.yml`](docs/github_release_workflow.yml). Copy it to `.github/workflows/release.yml` in GitHub (requires `workflow` permission) to trigger cloud Windows + Android builds on every `v*` tag or manual run.
 
 ---

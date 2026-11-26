@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=WhatIsThat
+Comment=Real-time offline AI camera object detection (601 classes)
+Exec=whatisthat
+Icon=whatisthat
+Terminal=false
+Categories=Utility;Graphics;AudioVideo;
+StartupNotify=true
