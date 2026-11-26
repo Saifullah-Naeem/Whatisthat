@@ -91,7 +91,7 @@ flutter test
 
 ### 5. Build Linux Desktop Bundle (Ubuntu / Debian)
 ```bash
-sudo apt install clang cmake ninja-build pkg-config libgtk-3-dev
+sudo apt install clang cmake ninja-build pkg-config libgtk-3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
 ./scripts/build_linux.sh
 # Output: dist/WhatIsThat-Linux-x64.tar.gz
 ```

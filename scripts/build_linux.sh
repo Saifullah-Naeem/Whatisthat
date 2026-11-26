@@ -8,7 +8,13 @@ export PATH="$HOME/development/flutter/bin:$PATH"
 
 if ! command -v clang++ >/dev/null 2>&1; then
   echo "Error: clang++ is required to build Flutter Linux desktop apps."
-  echo "Install it on Ubuntu/Debian with: sudo apt install clang cmake ninja-build pkg-config libgtk-3-dev"
+  echo "Install dependencies on Ubuntu/Debian with: sudo apt install clang cmake ninja-build pkg-config libgtk-3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev"
+  exit 1
+fi
+
+if ! pkg-config --exists gstreamer-1.0 gstreamer-app-1.0 gstreamer-video-1.0; then
+  echo "Error: GStreamer development headers are required by camera_desktop on Linux."
+  echo "Install them on Ubuntu/Debian with: sudo apt install libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev"
   exit 1
 fi
 
