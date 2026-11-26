@@ -9,10 +9,12 @@ class DetectionOverlayPainter extends CustomPainter {
   const DetectionOverlayPainter({
     required this.detections,
     required this.showConfidence,
+    this.minLabelTop = 66.0,
   });
 
   final List<Detection> detections;
   final bool showConfidence;
+  final double minLabelTop;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -59,6 +61,7 @@ class DetectionOverlayPainter extends CustomPainter {
           text: labelText,
           style: const TextStyle(
             color: Color(0xFF06090F),
+            fontFamily: 'Roboto',
             fontSize: 12.5,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.2,
@@ -80,6 +83,9 @@ class DetectionOverlayPainter extends CustomPainter {
       double pillTop = rect.top - pillH - 4.0;
       if (pillTop < 4.0) {
         pillTop = rect.top + 6.0;
+      }
+      if (pillTop < minLabelTop && rect.bottom > minLabelTop + pillH + 12.0) {
+        pillTop = minLabelTop;
       }
 
       final pillRect = RRect.fromRectAndRadius(
@@ -130,6 +136,7 @@ class DetectionOverlayPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant DetectionOverlayPainter oldDelegate) {
     return oldDelegate.detections != detections ||
-        oldDelegate.showConfidence != showConfidence;
+        oldDelegate.showConfidence != showConfidence ||
+        oldDelegate.minLabelTop != minLabelTop;
   }
 }

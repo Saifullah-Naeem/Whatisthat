@@ -14,6 +14,8 @@ import '../services/detector_service.dart';
 import '../services/image_preprocess.dart';
 import 'widgets/detection_overlay.dart';
 import 'widgets/status_dock.dart';
+import 'widgets/test_mode_panel.dart';
+import 'widgets/top_control_bar.dart';
 
 class CameraDetectionScreen extends StatefulWidget {
   const CameraDetectionScreen({
@@ -43,7 +45,7 @@ class _CameraDetectionScreenState extends State<CameraDetectionScreen>
 
   List<Detection> _detections = const [];
   bool _testMode = false;
-  double _confidenceThreshold = 0.34;
+  double _confidenceThreshold = 0.25;
   PresetFilter _presetFilter = PresetFilter.all;
 
   double _fps = 0.0;
@@ -351,6 +353,7 @@ class _CameraDetectionScreenState extends State<CameraDetectionScreen>
                                       painter: DetectionOverlayPainter(
                                         detections: _detections,
                                         showConfidence: _testMode,
+                                        minLabelTop: _testMode ? 174.0 : 66.0,
                                       ),
                                     ),
                                   ],
@@ -366,7 +369,7 @@ class _CameraDetectionScreenState extends State<CameraDetectionScreen>
               top: 10,
               left: 12,
               right: 12,
-              child: _TopControlBar(
+              child: TopControlBar(
                 canSwitchCamera: _cameras.length > 1,
                 onSwitchCamera: _switchCamera,
                 onSnapshot: _saveSnapshot,
@@ -389,7 +392,7 @@ class _CameraDetectionScreenState extends State<CameraDetectionScreen>
                 top: 72,
                 left: 14,
                 right: 14,
-                child: _TestModePanel(
+                child: TestModePanel(
                   fps: _fps,
                   inferenceMs: _inferenceMs,
                   providerLabel: _detector.providerLabel,
@@ -411,263 +414,6 @@ class _CameraDetectionScreenState extends State<CameraDetectionScreen>
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _TopControlBar extends StatelessWidget {
-  const _TopControlBar({
-    required this.canSwitchCamera,
-    required this.onSwitchCamera,
-    required this.onSnapshot,
-    required this.presetFilter,
-    required this.onTogglePreset,
-    required this.testMode,
-    required this.onToggleTestMode,
-  });
-
-  final bool canSwitchCamera;
-  final VoidCallback onSwitchCamera;
-  final VoidCallback onSnapshot;
-  final PresetFilter presetFilter;
-  final VoidCallback onTogglePreset;
-  final bool testMode;
-  final ValueChanged<bool> onToggleTestMode;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B0E14).withValues(alpha: 0.78),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [Color(0xFF22D3EE), Color(0xFF6366F1)],
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          const Text(
-            'WhatIsThat',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 15.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-            ),
-          ),
-          const Spacer(),
-          // Optional quick class filter chip
-          InkWell(
-            onTap: onTogglePreset,
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: presetFilter == PresetFilter.deskAndPeople
-                    ? const Color(0xFF6366F1).withValues(alpha: 0.30)
-                    : Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: presetFilter == PresetFilter.deskAndPeople
-                      ? const Color(0xFF818CF8)
-                      : Colors.white.withValues(alpha: 0.12),
-                ),
-              ),
-              child: Text(
-                presetFilter.displayName,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(width: 6),
-          IconButton(
-            tooltip: 'Save snapshot',
-            onPressed: onSnapshot,
-            visualDensity: VisualDensity.compact,
-            icon: const Icon(
-              Icons.camera_alt_outlined,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          if (canSwitchCamera)
-            IconButton(
-              tooltip: 'Switch camera',
-              onPressed: onSwitchCamera,
-              visualDensity: VisualDensity.compact,
-              icon: const Icon(
-                Icons.cameraswitch_outlined,
-                color: Colors.white,
-                size: 20,
-              ),
-            ),
-          const SizedBox(width: 2),
-          // Test Mode toggle (OFF by default)
-          InkWell(
-            onTap: () => onToggleTestMode(!testMode),
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-              decoration: BoxDecoration(
-                color: testMode
-                    ? const Color(0xFF22D3EE).withValues(alpha: 0.22)
-                    : Colors.white.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: testMode
-                      ? const Color(0xFF22D3EE)
-                      : Colors.white.withValues(alpha: 0.12),
-                ),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.tune_rounded,
-                    size: 14,
-                    color: testMode ? const Color(0xFF22D3EE) : Colors.white70,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    'Test',
-                    style: TextStyle(
-                      color: testMode ? const Color(0xFF22D3EE) : Colors.white70,
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TestModePanel extends StatelessWidget {
-  const _TestModePanel({
-    required this.fps,
-    required this.inferenceMs,
-    required this.providerLabel,
-    required this.confidenceThreshold,
-    required this.onConfidenceChanged,
-  });
-
-  final double fps;
-  final int inferenceMs;
-  final String providerLabel;
-  final double confidenceThreshold;
-  final ValueChanged<double> onConfidenceChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF0B0E14).withValues(alpha: 0.84),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: const Color(0xFF22D3EE).withValues(alpha: 0.35),
-        ),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              _MetricBadge(
-                label: 'FPS',
-                value: fps.toStringAsFixed(1),
-                color: const Color(0xFF22D3EE),
-              ),
-              const SizedBox(width: 8),
-              _MetricBadge(
-                label: 'Latency',
-                value: '${inferenceMs}ms',
-                color: const Color(0xFF818CF8),
-              ),
-              const SizedBox(width: 8),
-              _MetricBadge(
-                label: 'Engine',
-                value: providerLabel,
-                color: const Color(0xFF34D399),
-              ),
-              const Spacer(),
-              Text(
-                'Conf ${(confidenceThreshold * 100).round()}%',
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: const Color(0xFF22D3EE),
-              inactiveTrackColor: Colors.white12,
-              thumbColor: const Color(0xFF22D3EE),
-              overlayColor: const Color(0xFF22D3EE).withValues(alpha: 0.2),
-              trackHeight: 3,
-            ),
-            child: Slider(
-              value: confidenceThreshold,
-              min: 0.20,
-              max: 0.75,
-              divisions: 11,
-              onChanged: onConfidenceChanged,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MetricBadge extends StatelessWidget {
-  const _MetricBadge({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        '$label: $value',
-        style: TextStyle(
-          color: color,
-          fontSize: 11.5,
-          fontWeight: FontWeight.w700,
         ),
       ),
     );

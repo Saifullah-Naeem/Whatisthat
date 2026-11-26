@@ -49,6 +49,8 @@ const Set<String> kDeskAndPeopleLabels = {
   'Goggles',
   'Human hand',
   'Person',
+  'Woman',
+  'Man',
   'Human face',
   'Laptop',
   'Computer monitor',
