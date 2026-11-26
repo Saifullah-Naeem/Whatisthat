@@ -1,0 +1,20 @@
+# Build & environment artifacts
+.venv/
+.idea/
+*.iml
+**/__pycache__/
+*.pyc
+*.pt
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+dist/
+*.apk
+*.aab
+*.exe
+*.log
+.DS_Store
