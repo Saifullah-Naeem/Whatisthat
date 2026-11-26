@@ -1,158 +1,157 @@
-name: Build WhatIsThat Installers                                                      
-                                                                                           
-    on:                                                                                    
-      push:                                                                                
-        tags:                                                                              
-          - "v*"                                                                           
-      workflow_dispatch:                                                                   
-                                                                                           
-    permissions:                                                                           
-      contents: write                                                                      
-                                                                                           
-    jobs:                                                                                  
-      build-android:                                                                       
-        name: Build Android APK                                                            
-        runs-on: ubuntu-latest                                                             
-        steps:                                                                             
-          - name: Checkout repository                                                      
-            uses: actions/checkout@v4                                                      
-                                                                                           
-          - name: Set up Java 21                                                           
-            uses: actions/setup-java@v4                                                    
-            with:                                                                          
-              distribution: temurin                                                        
-              java-version: "21"                                                           
-                                                                                           
-          - name: Set up Flutter                                                           
-            uses: subosito/flutter-action@v2                                               
-            with:                                                                          
-              flutter-version: "3.50.1"                                                    
-              channel: stable                                                              
-              cache: true                                                                  
-                                                                                           
-          - name: Install dependencies and run tests                                       
-            run: |                                                                         
-              flutter pub get                                                              
-              flutter analyze                                                              
-              flutter test                                                                 
-                                                                                           
-          - name: Build universal release APK                                              
-            run: flutter build apk --release                                               
-                                                                                           
-          - name: Prepare APK artifact                                                     
-            run: |                                                                         
-              mkdir -p dist                                                                
-              cp build/app/outputs/flutter-apk/app-release.apk dist/WhatIsThat-Android.apk 
-                                                                                           
-          - name: Upload Android APK artifact                                              
-            uses: actions/upload-artifact@v4                                               
-            with:                                                                          
-              name: WhatIsThat-Android-APK                                                 
-              path: dist/WhatIsThat-Android.apk                                            
-                                                                                           
-      build-windows:                                                                       
-        name: Build Windows Setup EXE                                                      
-        runs-on: windows-latest                                                            
-        steps:                                                                             
-          - name: Checkout repository                                                      
-            uses: actions/checkout@v4                                                      
-                                                                                           
-          - name: Set up Flutter                                                           
-            uses: subosito/flutter-action@v2                                               
-            with:                                                                          
-              flutter-version: "3.50.1"                                                    
-              channel: stable                                                              
-              cache: true                                                                  
-                                                                                           
-          - name: Install dependencies and run tests                                       
-            run: |                                                                         
-              flutter pub get                                                              
-              flutter analyze                                                              
-              flutter test                                                                 
-                                                                                           
-          - name: Build Windows release executable                                         
-            run: flutter build windows --release                                           
-                                                                                           
-          - name: Ensure Inno Setup 6 is available                                         
-            shell: powershell                                                              
-            run: |                                                                         
-              $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"                       
-              if (-not (Test-Path $iscc)) {                                                
-                choco install innosetup -y --no-progress                                   
-              }                                                                            
-                                                                                           
-          - name: Compile Windows Setup Installer                                          
-            shell: powershell                                                              
-            run: |                                                                         
-              New-Item -ItemType Directory -Force -Path dist | Out-Null                    
-              & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\whatisthat.iss    
-                                                                                           
-          - name: Upload Windows Setup EXE artifact                                        
-            uses: actions/upload-artifact@v4                                               
-            with:                                                                          
-              name: WhatIsThat-Windows-Setup                                               
-              path: dist/WhatIsThatSetup.exe                                               
-                                                                                           
-      build-linux:                                                                         
-        name: Build Linux x64 Bundle                                                       
-        runs-on: ubuntu-latest                                                             
-        steps:                                                                             
-          - name: Checkout repository                                                      
-            uses: actions/checkout@v4                                                      
-                                                                                           
-          - name: Install Linux desktop dependencies                                       
-            run: |                                                                         
-              sudo apt-get update                                                          
-              sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev      
-              libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev                         
-                                                                                           
-          - name: Set up Flutter                                                           
-            uses: subosito/flutter-action@v2                                               
-            with:                                                                          
-              flutter-version: "3.50.1"                                                    
-              channel: stable                                                              
-              cache: true
-  
-          - name: Build Linux release bundle
-            run: |
-              chmod +x scripts/build_linux.sh
-              ./scripts/build_linux.sh
-  
-          - name: Upload Linux bundle artifact
-            uses: actions/upload-artifact@v4
-            with:
-              name: WhatIsThat-Linux-x64
-              path: dist/WhatIsThat-Linux-x64.tar.gz
-  
-      publish-release:
-        name: Publish GitHub Release
-        needs: [build-android, build-windows, build-linux]
-        if: startsWith(github.ref, 'refs/tags/v')
-        runs-on: ubuntu-latest
-        steps:
-          - name: Download Android APK
-            uses: actions/download-artifact@v4
-            with:
-              name: WhatIsThat-Android-APK
-              path: release-files
-  
-          - name: Download Windows Setup EXE
-            uses: actions/download-artifact@v4
-            with:
-              name: WhatIsThat-Windows-Setup
-              path: release-files
-  
-          - name: Download Linux x64 Bundle
-            uses: actions/download-artifact@v4
-            with:
-              name: WhatIsThat-Linux-x64
-              path: release-files
-  
-          - name: Create GitHub Release
-            uses: softprops/action-gh-release@v2
-            with:
-              files: |
-                release-files/WhatIsThat-Android.apk
-                release-files/WhatIsThatSetup.exe
-                release-files/WhatIsThat-Linux-x64.tar.gz
-              generate_release_notes: true
+name: Build WhatIsThat Installers
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.50.1"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies and run tests
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
+      - name: Build universal release APK
+        run: flutter build apk --release
+
+      - name: Prepare APK artifact
+        run: |
+          mkdir -p dist
+          cp build/app/outputs/flutter-apk/app-release.apk dist/WhatIsThat-Android.apk
+
+      - name: Upload Android APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WhatIsThat-Android-APK
+          path: dist/WhatIsThat-Android.apk
+
+  build-windows:
+    name: Build Windows Setup EXE
+    runs-on: windows-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.50.1"
+          channel: stable
+          cache: true
+
+      - name: Install dependencies and run tests
+        run: |
+          flutter pub get
+          flutter analyze
+          flutter test
+
+      - name: Build Windows release executable
+        run: flutter build windows --release
+
+      - name: Ensure Inno Setup 6 is available
+        shell: powershell
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup -y --no-progress
+          }
+
+      - name: Compile Windows Setup Installer
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path dist | Out-Null
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" installer\whatisthat.iss
+
+      - name: Upload Windows Setup EXE artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WhatIsThat-Windows-Setup
+          path: dist/WhatIsThatSetup.exe
+
+  build-linux:
+    name: Build Linux x64 Bundle
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Linux desktop dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang cmake ninja-build pkg-config libgtk-3-dev libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.50.1"
+          channel: stable
+          cache: true
+
+      - name: Build Linux release bundle
+        run: |
+          chmod +x scripts/build_linux.sh
+          ./scripts/build_linux.sh
+
+      - name: Upload Linux bundle artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WhatIsThat-Linux-x64
+          path: dist/WhatIsThat-Linux-x64.tar.gz
+
+  publish-release:
+    name: Publish GitHub Release
+    needs: [build-android, build-windows, build-linux]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Android APK
+        uses: actions/download-artifact@v4
+        with:
+          name: WhatIsThat-Android-APK
+          path: release-files
+
+      - name: Download Windows Setup EXE
+        uses: actions/download-artifact@v4
+        with:
+          name: WhatIsThat-Windows-Setup
+          path: release-files
+
+      - name: Download Linux x64 Bundle
+        uses: actions/download-artifact@v4
+        with:
+          name: WhatIsThat-Linux-x64
+          path: release-files
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-files/WhatIsThat-Android.apk
+            release-files/WhatIsThatSetup.exe
+            release-files/WhatIsThat-Linux-x64.tar.gz
+          generate_release_notes: true
