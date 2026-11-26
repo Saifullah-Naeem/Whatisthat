@@ -101,9 +101,13 @@ if(NOT EXISTS "${_ORT_DEST_DIR}/include/onnxruntime_cxx_api.h")
   file(COPY "${_ORT_TMP}/runtimes/linux-x64/native/libonnxruntime.so"
             "${_ORT_TMP}/runtimes/linux-x64/native/libonnxruntime_providers_shared.so"
        DESTINATION "${_ORT_DEST_DIR}/lib")
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E create_symlink libonnxruntime.so "${_ORT_DEST_DIR}/lib/libonnxruntime.so.1"
+  )
   file(REMOVE "${_ORT_NUPKG}")
   file(REMOVE_RECURSE "${_ORT_TMP}")
 endif()
+set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-rpath-link,${_ORT_DEST_DIR}/lib")
 
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
@@ -140,6 +144,12 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endforeach(bundled_library)
+
+if(EXISTS "${_ORT_DEST_DIR}/lib/libonnxruntime.so.1")
+  install(FILES "${_ORT_DEST_DIR}/lib/libonnxruntime.so.1"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+endif()
 
 if(EXISTS "${_ORT_DEST_DIR}/lib/libonnxruntime_providers_shared.so")
   install(FILES "${_ORT_DEST_DIR}/lib/libonnxruntime_providers_shared.so"
