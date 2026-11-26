@@ -70,6 +70,41 @@ set_target_properties(${BINARY_NAME}
 )
 
 
+# Pre-stage Microsoft.ML.OnnxRuntime from NuGet so flutter_onnxruntime does not
+# attempt to fetch the unavailable v1.28.3 GitHub release archive.
+set(_ORT_DEST_DIR "${CMAKE_BINARY_DIR}/plugins/flutter_onnxruntime/onnxruntime/onnxruntime-linux-x64-1.28.3")
+if(NOT EXISTS "${_ORT_DEST_DIR}/include/onnxruntime_cxx_api.h")
+  set(_ORT_NUPKG "${CMAKE_BINARY_DIR}/onnxruntime.1.28.0.nupkg.zip")
+  set(_ORT_TMP "${CMAKE_BINARY_DIR}/_ort_nuget_extract")
+  message(STATUS "Downloading Microsoft.ML.OnnxRuntime 1.28.0 from NuGet...")
+  file(DOWNLOAD
+    "https://api.nuget.org/v3-flatcontainer/microsoft.ml.onnxruntime/1.28.0/microsoft.ml.onnxruntime.1.28.0.nupkg"
+    "${_ORT_NUPKG}"
+    STATUS _ORT_DL_STATUS
+    SHOW_PROGRESS
+  )
+  list(GET _ORT_DL_STATUS 0 _ORT_DL_CODE)
+  if(NOT _ORT_DL_CODE EQUAL 0)
+    message(FATAL_ERROR "Failed to download ONNX Runtime NuGet package: ${_ORT_DL_STATUS}")
+  endif()
+  file(MAKE_DIRECTORY "${_ORT_TMP}")
+  execute_process(
+    COMMAND ${CMAKE_COMMAND} -E tar xf "${_ORT_NUPKG}"
+    WORKING_DIRECTORY "${_ORT_TMP}"
+    RESULT_VARIABLE _ORT_TAR_RES
+  )
+  if(NOT _ORT_TAR_RES EQUAL 0)
+    message(FATAL_ERROR "Failed to extract ONNX Runtime NuGet package")
+  endif()
+  file(MAKE_DIRECTORY "${_ORT_DEST_DIR}/include" "${_ORT_DEST_DIR}/lib")
+  file(COPY "${_ORT_TMP}/build/native/include/" DESTINATION "${_ORT_DEST_DIR}/include")
+  file(COPY "${_ORT_TMP}/runtimes/linux-x64/native/libonnxruntime.so"
+            "${_ORT_TMP}/runtimes/linux-x64/native/libonnxruntime_providers_shared.so"
+       DESTINATION "${_ORT_DEST_DIR}/lib")
+  file(REMOVE "${_ORT_NUPKG}")
+  file(REMOVE_RECURSE "${_ORT_TMP}")
+endif()
+
 # Generated plugin build rules, which manage building the plugins and adding
 # them to the application.
 include(flutter/generated_plugins.cmake)
@@ -105,6 +140,12 @@ foreach(bundled_library ${PLUGIN_BUNDLED_LIBRARIES})
     DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
     COMPONENT Runtime)
 endforeach(bundled_library)
+
+if(EXISTS "${_ORT_DEST_DIR}/lib/libonnxruntime_providers_shared.so")
+  install(FILES "${_ORT_DEST_DIR}/lib/libonnxruntime_providers_shared.so"
+    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+    COMPONENT Runtime)
+endif()
 
 # Copy the native assets provided by the hook/build.dart from all packages.
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/linux/")
